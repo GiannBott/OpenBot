@@ -1,0 +1,12 @@
+data: {"id":"evt_219dddd59001WXuH3gq15DZEVH","type":"server.connected","data":{}}
+
+: heartbeat
+
+data: {"id":"evt_219dde2e3001Z2TS2j64ugqCPb","created":1795730301667,"type":"session.inbox.enqueued","location":{"directory":"C:\\Users\\gianl\\OneDrive\\Documents\\OpenBot\\OpenBot"},"data":{"inboxID":"msg_219dde2e2001HyssJTIvnXvblm","sessionID":"ses_de6292bebffe9T59GalHYjYSWg","item":{"type":"user","payload":{"text":"Respond� �nicamente con: OK."},"delivery":"steer"}},"durable":{"aggregateID":"ses_de6292bebffe9T59GalHYjYSWg","seq":23,"version":1}}
+
+data: {"id":"evt_219dde2e6001gAhFVin4PyhI9m","created":1795730301670,"type":"project.updated","location":{"directory":"C:\\Users\\gianl\\OneDrive\\Documents\\OpenBot\\OpenBot"},"data":{"id":"e6142d523ba50105e84de8278f95773fd3b561c0","canonical":"C:\\Users\\gianl\\OneDrive\\Documents\\OpenBot\\OpenBot","vcs":"git","time":{"created":1795729839229,"updated":1795729839229,"active":1795730301669},"sandboxes":[]}}
+
+data: {"id":"evt_219dde2e6002i1HLYtpkCBe9KW","created":1795730301670,"type":"session.execution.started","data":{"sessionID":"ses_de6292bebffe9T59GalHYjYSWg"},"durable":{"aggregateID":"ses_de6292bebffe9T59GalHYjYSWg","seq":24,"version":1}}
+
+data: {"id":"evt_219dde2ee0016orT29a7dRvRWN","created":1795730301678,"type":"session.inbox.delivered","location":{"directory":"C:\\Users\\gianl\\OneDrive\\Documents\\OpenBot\\OpenBot"},"data":{"sessionID":"ses_de6292bebffe9T59GalHYjYSWg","inboxID":"msg_219dde2e2001HyssJTIvnXvblm"},"durable":{"aggregateID":"ses_de6292bebffe9T59GalHYjYSWg","seq":25,"version":1}}
+

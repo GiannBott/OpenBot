@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🤖 oc-discord
+# 🤖 OpenBot
 
 **Manejá OpenChamber / OpenCode desde Discord.**
 Mandá prompts, cambiá de modelo, razonamiento y agente, revisá el usage, subí y descargá archivos, y respondé las preguntas del agente sin salir del chat.
@@ -9,7 +9,7 @@ Mandá prompts, cambiá de modelo, razonamiento y agente, revisá el usage, sub�
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord&logoColor=white)
 ![OpenCode](https://img.shields.io/badge/OpenCode-server-111111)
-![Model](https://img.shields.io/badge/model-DeepSeek%20V4.1%20Flash-4D6BFE)
+![Models](https://img.shields.io/badge/models-any%20OpenCode%20provider-8A2BE2)
 ![Status](https://img.shields.io/badge/status-WIP-orange)
 
 [Características](#-características) · [Arquitectura](#-arquitectura) · [Flujos](#-flujos) · [Comandos](#-comandos) · [Instalación](#-instalación) · [Roadmap](#-roadmap)
@@ -38,11 +38,11 @@ Mandá prompts, cambiá de modelo, razonamiento y agente, revisá el usage, sub�
 
 ```mermaid
 flowchart LR
-    U([👤 Vos en Discord]) -->|slash commands<br/>botones · modals| B[🤖 oc-discord]
+    U([👤 Vos en Discord]) -->|slash commands<br/>botones · modals| B[🤖 OpenBot]
     B -->|HTTP + basic auth| S[(OpenCode server<br/>:4096)]
     S -->|SSE /event| B
     OC[🖥 OpenChamber UI] <-->|misma API| S
-    S --> M[🧠 DeepSeek V4.1 Flash]
+    S --> M[🧠 Cualquier modelo<br/>de OpenCode]
     S --> MCP[🔌 Servidores MCP]
     S --> W[📁 Workspace]
     B -->|embeds · adjuntos| U
@@ -83,7 +83,7 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
     actor U as Vos
-    participant B as oc-discord
+    participant B as OpenBot
     participant S as OpenCode
     U->>B: /ask "armá un diagrama del login"
     B-->>U: embed ⏳ cargando
@@ -134,6 +134,7 @@ flowchart LR
 
 | Comando | Descripción |
 |---|---|
+| `/ping` | Verifica que el bot está conectado y que tenés acceso |
 | `/status` | Sesión, modelo, razonamiento, agente, usage y MCP en un solo embed |
 | `/usage` | Tokens y costo de la sesión y del día |
 | `/model [modelo]` | Ver o cambiar el modelo |
@@ -159,8 +160,8 @@ flowchart LR
 ### Pasos
 
 ```bash
-git clone https://github.com/<tu-usuario>/oc-discord.git
-cd oc-discord
+git clone https://github.com/<tu-usuario>/openbot.git
+cd openbot
 npm install
 cp .env.example .env     # completá las variables
 npm run register         # registra los slash commands
@@ -180,6 +181,7 @@ npm run dev              # o: npm start
 | `OPENCODE_SERVER_USERNAME` | Usuario de basic auth (por defecto `opencode`) |
 | `OPENCODE_SERVER_PASSWORD` | Contraseña del servidor |
 | `UPLOAD_DIR` | Carpeta de subidas (por defecto `./uploads/`) |
+| `DB_PATH` | Base SQLite del bot (por defecto `./data/openbot.db`) |
 | `MAX_FILE_MB` | Tamaño máximo de archivo (por defecto `10`) |
 | `QUESTION_TIMEOUT_MIN` | Minutos antes de marcar una pregunta sin respuesta (por defecto `30`) |
 | `EMOJI_*` | Emojis custom: `CORRECTO`, `ALERTA`, `CARGANDO`, `PAUSA`, `DESCARGA`, `CARGA` |
@@ -215,30 +217,28 @@ Copiá ese texto completo en la variable correspondiente. Los animados empiezan 
 ## 🗂 Estructura
 
 ```
-src/
-├── index.ts              # arranque y registro de comandos
-├── config.ts             # validación del .env
-├── emojis.ts             # mapa de emojis
-├── state.ts              # estado persistido en JSON
-├── opencode/
-│   ├── client.ts         # cliente HTTP del servidor
-│   └── events.ts         # escucha de eventos SSE
-├── commands/             # un archivo por comando
-├── interactions/         # botones, menús y modals
-├── files/
-│   ├── upload.ts
-│   └── download.ts
-└── ui/embeds.ts          # embeds compartidos
+.
+├── src/                  # código fuente del bot
+│   ├── commands/         # un archivo por comando
+│   ├── interactions/     # botones, menús y modals
+│   ├── opencode/         # cliente HTTP y eventos SSE
+│   ├── files/            # subidas y descargas
+│   ├── db/               # SQLite: conexión, consultas y migraciones
+│   └── ui/               # embeds compartidos
+├── skills/               # skills del agente de desarrollo
+├── plans/                # una fase del plan por archivo
+├── agent.md              # instrucciones del agente de desarrollo
+└── readme.md
 ```
 
 ---
 
 ## 🛣 Roadmap
 
-- [ ] **P0** · Mapeo de la API y los eventos
-- [ ] **P1** · Esqueleto del bot
-- [ ] **P2** · Cliente de OpenCode
-- [ ] **P3** · Comandos de consulta (`/status`, `/usage`, `/mcp`)
+- [x] **P0** · Mapeo de la API y los eventos
+- [x] **P1** · Esqueleto del bot
+- [x] **P2** · Cliente de OpenCode
+- [x] **P3** · Comandos de consulta (`/status`, `/usage`, `/mcp`)
 - [ ] **P4** · Cambio de modelo, razonamiento y agente
 - [ ] **P5** · Prompts y ciclo de vida de tareas
 - [ ] **P6** · Descargas
@@ -246,7 +246,7 @@ src/
 - [ ] **P8** · Preguntas y permisos
 - [ ] **P9** · Robustez y despliegue como servicio
 
-El detalle de cada fase está en [`PLAN.md`](./PLAN.md) y las reglas para el agente de desarrollo en [`AGENTS.md`](./AGENTS.md).
+El detalle de cada fase está en [`plans/`](./plans/README.md), las reglas del agente de desarrollo en [`agent.md`](./agent.md) y su conocimiento técnico en [`skills/`](./skills/README.md).
 
 ---
 
