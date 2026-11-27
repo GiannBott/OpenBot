@@ -14,7 +14,7 @@ Rules:
 | [P1](p1-scaffold.md) | Scaffold | done |
 | [P2](p2-opencode-client.md) | OpenCode client | done |
 | [P3](p3-read-only-commands.md) | Read-only commands | done |
-| [P4](p4-control-commands.md) | Control commands | wip |
+| [P4](p4-control-commands.md) | Control commands | done |
 | [P5](p5-prompt-task-lifecycle.md) | Prompt + task lifecycle | todo |
 | [P6](p6-downloads.md) | Downloads | todo |
 | [P7](p7-uploads.md) | Uploads | todo |

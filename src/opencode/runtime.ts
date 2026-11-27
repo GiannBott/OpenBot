@@ -1,4 +1,6 @@
-import type { OpenCodeClient } from "./client.js";
+import type { OpenCodeAgent, OpenCodeClient, OpenCodeModel } from "./client.js";
+
+export type { OpenCodeAgent, OpenCodeModel };
 
 let client: OpenCodeClient | undefined;
 

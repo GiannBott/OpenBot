@@ -13,8 +13,8 @@ Authentication is HTTP Basic: fixed username `opencode`; password is configured 
 | List agents | `GET /api/agent` | Optional location query; `200` returns location + agent array. |
 | List models | `GET /api/model` | `200` returns model list. `Model.Info` includes `capabilities`, `variants`, `enabled`, `status`, `limit` and cost/time metadata. |
 | List providers | `GET /api/provider` | `200` returns provider list. |
-| Switch agent | `POST /api/session/{sessionID}/agent` | JSON `{ agent }`; `204`. |
-| Switch model / variant | `POST /api/session/{sessionID}/model` | JSON `{ model }`, where `Model.Ref` is `{ providerID, id, variant? }`; `204`. |
+| Switch agent | `POST /api/session/{sessionID}/agent` | JSON `{ agent }`; `204` without body. |
+| Switch model / variant | `POST /api/session/{sessionID}/model` | JSON `{ model }`, where `Model.Ref` is `{ providerID, id, variant? }`; `204` without body. |
 | MCP status | `GET /api/mcp` | `200` returns MCP server state. |
 | SSE | `GET /api/event` | `text/event-stream`; optional `types` filter; first event is `server.connected`. Stream is volatile and must reconnect. |
 | Pending questions | `GET /api/form` | `200` returns pending forms. |

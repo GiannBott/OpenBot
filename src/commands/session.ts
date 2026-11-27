@@ -32,9 +32,16 @@ export const sessionCommand = {
       return;
     }
 
-    const session = action === "new"
-      ? await client.createSession()
-      : (await client.listSessions()).find((item) => item.id === interaction.options.getString("id", true));
+    let session;
+    if (action === "new") {
+      session = await client.createSession();
+    } else if (action === "use") {
+      const sessionId = interaction.options.getString("id", true);
+      session = (await client.listSessions()).find((item) => item.id === sessionId);
+    } else {
+      await interaction.editReply({ content: "Subcomando de sesión no reconocido." });
+      return;
+    }
     if (!session) {
       await interaction.editReply({ content: "No encontre esa sesion en OpenCode." });
       return;

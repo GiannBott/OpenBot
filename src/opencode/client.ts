@@ -109,6 +109,7 @@ export class OpenCodeClient {
           signal: controller.signal
         });
         if (!response.ok) throw new OpenCodeHttpError(response.status);
+        if (response.status === 204) return undefined;
         return await response.json();
       } catch (error) {
         if (error instanceof OpenCodeHttpError || attempt === 1) throw error;

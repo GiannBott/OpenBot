@@ -12,6 +12,9 @@ import { statusCommand } from "./commands/status.js";
 import { usageCommand } from "./commands/usage.js";
 import { mcpCommand } from "./commands/mcp.js";
 import { sessionCommand } from "./commands/session.js";
+import { modelCommand } from "./commands/model.js";
+import { reasoningCommand } from "./commands/reasoning.js";
+import { agentCommand } from "./commands/agent.js";
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 loadEmojis(logger);
@@ -32,6 +35,16 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 client.once(Events.ClientReady, (readyClient) => logger.info({ user: readyClient.user.tag }, "OpenBot connected"));
 client.on(Events.InteractionCreate, async (interaction) => {
   void openCode;
+  if (interaction.isAutocomplete()) {
+    try {
+      if (interaction.commandName === modelCommand.data.name) await modelCommand.autocomplete(interaction);
+      if (interaction.commandName === reasoningCommand.data.name) await reasoningCommand.autocomplete(interaction);
+      if (interaction.commandName === agentCommand.data.name) await agentCommand.autocomplete(interaction);
+    } catch (error) {
+      logger.error({ error, command: interaction.commandName }, "Autocomplete failed");
+    }
+    return;
+  }
   if (!interaction.isChatInputCommand()) return;
   try {
     if (interaction.commandName === pingCommand.data.name) await pingCommand.execute(interaction, logger);
@@ -41,9 +54,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === usageCommand.data.name) await usageCommand.execute(interaction, logger);
     if (interaction.commandName === mcpCommand.data.name) await mcpCommand.execute(interaction, logger);
     if (interaction.commandName === sessionCommand.data.name) await sessionCommand.execute(interaction, logger);
+    if (interaction.commandName === modelCommand.data.name) await modelCommand.execute(interaction, logger);
+    if (interaction.commandName === reasoningCommand.data.name) await reasoningCommand.execute(interaction, logger);
+    if (interaction.commandName === agentCommand.data.name) await agentCommand.execute(interaction, logger);
   } catch (error) {
     logger.error({ error, command: interaction.commandName }, "Interaction failed");
-    if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+    if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {
+      await interaction.editReply({ content: "⚠️ Ocurrió un error. Probá de nuevo." }).catch(() => undefined);
+    } else if (interaction.isRepliable() && !interaction.replied) {
       await interaction.reply({ content: "⚠️ Ocurrió un error. Probá de nuevo.", ephemeral: true });
     }
   }
