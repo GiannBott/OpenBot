@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pingüino animado</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: grid;
+    place-items: center;
+    background: radial-gradient(120% 120% at 50% 15%, #1c2f4d 0%, #0b1220 65%);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .stage {
+    position: relative;
+    width: min(86vmin, 560px);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+  }
+
+  /* ---------- nieve ---------- */
+  .snow {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .snow i {
+    position: absolute;
+    top: -8%;
+    border-radius: 50%;
+    background: #dff3ff;
+    filter: blur(.2px);
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-10vh) translateX(0); }
+    100% { transform: translateY(115vh) translateX(24px); }
+  }
+
+  /* ---------- pingüino ---------- */
+  .penguin { width: 100%; height: 100%; overflow: visible; }
+
+  .waddle {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: waddle 1.7s ease-in-out infinite;
+  }
+  @keyframes waddle {
+    0%, 100% { transform: rotate(-3.6deg) translateY(0); }
+    50%      { transform: rotate(3.6deg) translateY(-6px); }
+  }
+
+  .shadow {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: shadow 1.7s ease-in-out infinite;
+  }
+  @keyframes shadow {
+    0%, 100% { transform: scaleX(1);   opacity: .35; }
+    50%      { transform: scaleX(.86); opacity: .22; }
+  }
+
+  .eye {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: blink 4.6s infinite;
+  }
+  .eye-r { animation-delay: .12s; }
+  @keyframes blink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    94%           { transform: scaleY(.08); }
+    97%           { transform: scaleY(1); }
+  }
+
+  .flipper { transform-box: fill-box; }
+  .flipper-l {
+    transform-origin: 100% 0%;
+    animation: flapL 2.6s ease-in-out infinite;
+  }
+  .flipper-r {
+    transform-origin: 0% 0%;
+    animation: flapR 2.6s ease-in-out infinite;
+  }
+  @keyframes flapL {
+    0%, 100% { transform: rotate(0); }
+    50%      { transform: rotate(14deg); }
+  }
+  @keyframes flapR {
+    0%, 100% { transform: rotate(0); }
+    50%      { transform: rotate(-14deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .waddle, .shadow, .eye, .flipper, .snow i { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="snow" id="snow"></div>
+
+    <svg class="penguin" viewBox="0 0 400 400" role="img" aria-label="Pingüino animado">
+      <defs>
+        <radialGradient id="bodyGrad" cx="42%" cy="30%" r="75%">
+          <stop offset="0%"   stop-color="#3d5474" />
+          <stop offset="55%"  stop-color="#243349" />
+          <stop offset="100%" stop-color="#121c2b" />
+        </radialGradient>
+        <linearGradient id="bellyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffffff" />
+          <stop offset="70%"  stop-color="#e8f3fc" />
+          <stop offset="100%" stop-color="#c3d8ea" />
+        </linearGradient>
+        <linearGradient id="beakGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffb347" />
+          <stop offset="100%" stop-color="#f08c00" />
+        </linearGradient>
+        <linearGradient id="footGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffb347" />
+          <stop offset="100%" stop-color="#e07b00" />
+        </linearGradient>
+      </defs>
+
+      <!-- sombra -->
+      <ellipse class="shadow" cx="200" cy="366" rx="92" ry="16" fill="#000" opacity=".35" />
+
+      <g class="waddle">
+        <!-- pies -->
+        <ellipse cx="164" cy="352" rx="27" ry="12" fill="url(#footGrad)" />
+        <ellipse cx="236" cy="352" rx="27" ry="12" fill="url(#footGrad)" />
+
+        <!-- aletas -->
+        <path class="flipper flipper-l"
+              d="M116 200 C 86 236, 84 292, 110 322 C 130 306, 136 258, 132 214 Z"
+              fill="url(#bodyGrad)" />
+        <path class="flipper flipper-r"
+              d="M284 200 C 314 236, 316 292, 290 322 C 270 306, 264 258, 268 214 Z"
+              fill="url(#bodyGrad)" />
+
+        <!-- cuerpo -->
+        <ellipse cx="200" cy="238" rx="98" ry="120" fill="url(#bodyGrad)" />
+
+        <!-- panza -->
+        <ellipse cx="200" cy="258" rx="66" ry="94" fill="url(#bellyGrad)" />
+
+        <!-- ojos -->
+        <g class="eye eye-l">
+          <circle cx="176" cy="188" r="16" fill="#ffffff" />
+          <circle cx="179" cy="190" r="7.5" fill="#0b1220" />
+          <circle cx="182" cy="186" r="2.6" fill="#ffffff" />
+        </g>
+        <g class="eye eye-r">
+          <circle cx="224" cy="188" r="16" fill="#ffffff" />
+          <circle cx="227" cy="190" r="7.5" fill="#0b1220" />
+          <circle cx="230" cy="186" r="2.6" fill="#ffffff" />
+        </g>
+
+        <!-- pico -->
+        <path d="M183 210 L217 210 L200 230 Z" fill="url(#beakGrad)" />
+        <path d="M183 210 L217 210 L200 216 Z" fill="#ffd08a" opacity=".55" />
+
+        <!-- mejillas -->
+        <ellipse cx="158" cy="212" rx="11" ry="6" fill="#ff8fa3" opacity=".35" />
+        <ellipse cx="242" cy="212" rx="11" ry="6" fill="#ff8fa3" opacity=".35" />
+      </g>
+    </svg>
+  </div>
+
+  <script>
+    // copos de nieve
+    const snow = document.getElementById('snow');
+    for (let i = 0; i < 26; i++) {
+      const flake = document.createElement('i');
+      const size = 3 + Math.random() * 5;
+      flake.style.left = Math.random() * 100 + '%';
+      flake.style.width = size + 'px';
+      flake.style.height = size + 'px';
+      flake.style.animationDuration = (4 + Math.random() * 6) + 's';
+      flake.style.animationDelay = (-Math.random() * 10) + 's';
+      flake.style.opacity = 0.3 + Math.random() * 0.5;
+      snow.appendChild(flake);
+    }
+  </script>
+</body>
+</html>

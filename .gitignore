@@ -1,4 +1,5 @@
 .env
 data/
 uploads/
+.openbot/
 

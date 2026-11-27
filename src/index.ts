@@ -19,6 +19,10 @@ import { reasoningCommand } from "./commands/reasoning.js";
 import { agentCommand } from "./commands/agent.js";
 import { askCommand } from "./commands/ask.js";
 import { abortCommand } from "./commands/abort.js";
+import { downloadCommand } from "./commands/download.js";
+import { handleDownload } from "./files/downloads.js";
+import { handleUploadMessage, handleUploadRequest } from "./files/uploads.js";
+import { requireAllowedUser } from "./interactions/auth.js";
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 loadEmojis(logger);
@@ -40,10 +44,24 @@ try {
   process.exit(1);
 }
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 client.once(Events.ClientReady, (readyClient) => logger.info({ user: readyClient.user.tag }, "OpenBot connected"));
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot || !config.allowedUserIds.has(message.author.id)) return;
+  try {
+    await handleUploadMessage(message);
+  } catch (error) {
+    logger.error({ error, channelId: message.channelId }, "Upload message handling failed");
+  }
+});
 client.on(Events.InteractionCreate, async (interaction) => {
   void openCode;
+  if (interaction.isButton() || interaction.isStringSelectMenu()) {
+    if (!(await requireAllowedUser(interaction))) return;
+    if (interaction.customId === "dl:select" || interaction.customId.startsWith("dl:")) await handleDownload(interaction);
+    if (interaction.isButton() && interaction.customId.startsWith("up:")) await handleUploadRequest(interaction);
+    return;
+  }
   if (interaction.isAutocomplete()) {
     try {
       if (interaction.commandName === modelCommand.data.name) await modelCommand.autocomplete(interaction);
@@ -68,6 +86,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === agentCommand.data.name) await agentCommand.execute(interaction, logger);
     if (interaction.commandName === askCommand.data.name) await askCommand.execute(interaction, logger);
     if (interaction.commandName === abortCommand.data.name) await abortCommand.execute(interaction, logger);
+    if (interaction.commandName === downloadCommand.data.name) await downloadCommand.execute(interaction, logger);
   } catch (error) {
     logger.error({ error, command: interaction.commandName }, "Interaction failed");
     if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {

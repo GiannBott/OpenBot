@@ -34,6 +34,7 @@ export function taskEmbed(input: {
   variant?: string | null;
   tokens?: unknown;
   cost?: number;
+  files?: Array<{ path: string; size: number }>;
 }): EmbedBuilder {
   const style = taskStyle[input.status];
   const description = input.text ? input.text.slice(0, 4_096) : "El agente está trabajando…";
@@ -47,6 +48,7 @@ export function taskEmbed(input: {
   if (input.status === "correcto") {
     fields.push({ name: "USAGE", value: formatTokens(input.tokens), inline: false });
     fields.push({ name: "COSTO", value: input.cost === undefined ? "No disponible" : `$${input.cost.toFixed(6)}`, inline: true });
+    if (input.files?.length) fields.push({ name: "ARCHIVOS", value: input.files.map((file) => `${getEmoji("descarga")} ${file.path} (${formatBytes(file.size)})`).join("\n").slice(0, 1_024), inline: false });
   }
   return new EmbedBuilder()
     .setColor(style.color)
@@ -55,4 +57,10 @@ export function taskEmbed(input: {
     .addFields(fields)
     .setFooter({ text: footer.slice(0, 2_048) })
     .setTimestamp();
+}
+
+export function formatBytes(size: number): string {
+  if (size < 1_024) return `${size} B`;
+  if (size < 1_024 ** 2) return `${(size / 1_024).toFixed(1)} KB`;
+  return `${(size / 1_024 ** 2).toFixed(1)} MB`;
 }

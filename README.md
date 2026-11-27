@@ -210,6 +210,8 @@ Copiá ese texto completo en la variable correspondiente. Los animados empiezan 
 - Solo los usuarios de `ALLOWED_USER_IDS` pueden usar comandos, botones, formularios y subidas.
 - Las credenciales viven solo en `.env` y nunca se muestran ni se loguean.
 - Las rutas de subida y descarga se validan contra path traversal.
+- Si un archivo supera `MAX_FILE_MB`, el bot lo comprime en zip; si sigue pasando el límite, te deja la ruta relativa.
+- Los diagramas Mermaid/PlantUML se renderizan a PNG si `mmdc` o `plantuml` están en el PATH; si no, se adjunta la fuente.
 - Si exponés OpenCode fuera de tu máquina, protegelo siempre con contraseña.
 
 ---
@@ -239,8 +241,8 @@ Copiá ese texto completo en la variable correspondiente. Los animados empiezan 
 - [x] **P1** · Esqueleto del bot
 - [x] **P2** · Cliente de OpenCode
 - [x] **P3** · Comandos de consulta (`/status`, `/usage`, `/mcp`)
-- [ ] **P4** · Cambio de modelo, razonamiento y agente
-- [ ] **P5** · Prompts y ciclo de vida de tareas
+- [x] **P4** · Cambio de modelo, razonamiento y agente
+- [x] **P5** · Prompts y ciclo de vida de tareas
 - [ ] **P6** · Descargas
 - [ ] **P7** · Subidas
 - [ ] **P8** · Preguntas y permisos

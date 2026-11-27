@@ -91,8 +91,11 @@ export class OpenCodeEvents {
       this.logger.debug({ type: event.type }, "Unknown OpenCode event type");
     }
     const sessionId = typeof event.data.sessionID === "string" ? event.data.sessionID : undefined;
-    if (!sessionId) return;
-    for (const handler of this.handlers.get(sessionId) ?? []) {
+    const targets = sessionId ? this.handlers.get(sessionId) : event.type === "file.edited" || event.type === "filesystem.changed"
+      ? [...this.handlers.values()].flatMap((handlers) => [...handlers])
+      : undefined;
+    if (!targets) return;
+    for (const handler of targets) {
       void Promise.resolve(handler(event)).catch((error) => this.logger.error({ error, sessionId, type: event.type }, "OpenCode event handler failed"));
     }
   }

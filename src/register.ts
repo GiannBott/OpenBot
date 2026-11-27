@@ -12,7 +12,8 @@ import { reasoningCommand } from "./commands/reasoning.js";
 import { agentCommand } from "./commands/agent.js";
 import { askCommand } from "./commands/ask.js";
 import { abortCommand } from "./commands/abort.js";
+import { downloadCommand } from "./commands/download.js";
 
 const rest = new REST({ version: "10" }).setToken(config.DISCORD_TOKEN);
-await rest.put(Routes.applicationGuildCommands(config.DISCORD_CLIENT_ID, config.DISCORD_GUILD_ID), { body: [pingCommand.data.toJSON(), luchitoCommand.data.toJSON(), molestarCommand.data.toJSON(), statusCommand.data.toJSON(), usageCommand.data.toJSON(), mcpCommand.data.toJSON(), sessionCommand.data.toJSON(), modelCommand.data.toJSON(), reasoningCommand.data.toJSON(), agentCommand.data.toJSON(), askCommand.data.toJSON(), abortCommand.data.toJSON()] });
+await rest.put(Routes.applicationGuildCommands(config.DISCORD_CLIENT_ID, config.DISCORD_GUILD_ID), { body: [pingCommand.data.toJSON(), luchitoCommand.data.toJSON(), molestarCommand.data.toJSON(), statusCommand.data.toJSON(), usageCommand.data.toJSON(), mcpCommand.data.toJSON(), sessionCommand.data.toJSON(), modelCommand.data.toJSON(), reasoningCommand.data.toJSON(), agentCommand.data.toJSON(), askCommand.data.toJSON(), abortCommand.data.toJSON(), downloadCommand.data.toJSON()] });
 console.log("Comandos registrados.");

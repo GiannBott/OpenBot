@@ -23,3 +23,10 @@ export function loadEmojis(logger: Logger): Record<EmojiName, string> {
 export function getEmoji(name: EmojiName): string {
   return configured[name] ?? fallbacks[name];
 }
+
+export function getEmojiComponent(name: EmojiName): { id?: string; name: string; animated?: boolean } | string {
+  const value = getEmoji(name);
+  const custom = value.match(/^<(a)?:([^:]+):(\d+)>$/);
+  if (!custom) return value;
+  return { animated: Boolean(custom[1]), name: custom[2] ?? name, id: custom[3] };
+}

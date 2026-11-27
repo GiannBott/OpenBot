@@ -3,6 +3,7 @@ import type { Logger } from "pino";
 import { getChannelState, saveChannelState } from "../db/repo.js";
 import { requireAllowedUser } from "../interactions/auth.js";
 import { getOpenCodeClient, getTaskTracker } from "../opencode/runtime.js";
+import { taskFileComponents } from "../files/uploads.js";
 import { taskEmbed } from "../ui/embeds.js";
 
 export const askCommand = {
@@ -35,7 +36,10 @@ export const askCommand = {
       }
       if (state?.agent) await client.setSessionAgent(sessionId, state.agent);
     }
-    await interaction.editReply({ embeds: [taskEmbed({ status: "cargando", sessionId, prompt, model: state?.model, agent: state?.agent, variant: state?.variant })] });
+    await interaction.editReply({
+      embeds: [taskEmbed({ status: "cargando", sessionId, prompt, model: state?.model, agent: state?.agent, variant: state?.variant })],
+      components: taskFileComponents()
+    });
     const message = await interaction.fetchReply();
     const tracker = getTaskTracker();
     tracker.start({ message, sessionId, prompt, model: state?.model, agent: state?.agent, variant: state?.variant });

@@ -1,6 +1,11 @@
+import { createHash } from "node:crypto";
 import { AttachmentBuilder, type Message } from "discord.js";
 import type { Logger } from "pino";
 import type { OpenCodeEvent, OpenCodeEvents } from "../opencode/events.js";
+import { registerFile, type StoredFile } from "../db/repo.js";
+import { extractDiagramFences } from "../files/diagrams.js";
+import { taskFileComponents } from "../files/uploads.js";
+import { toWorkspaceRelative, workspaceFile, writeWorkspaceFile } from "../files/workspace.js";
 import { taskEmbed } from "../ui/embeds.js";
 
 interface TaskInput {
@@ -42,6 +47,8 @@ class ActiveTask {
   private text = "";
   private tokens: unknown;
   private cost: number | undefined;
+  private readonly outputPaths = new Set<string>();
+  private outputs: StoredFile[] = [];
   private lastEdit = 0;
   private timer: NodeJS.Timeout | undefined;
   private readonly unsubscribe: () => void;
@@ -60,7 +67,7 @@ class ActiveTask {
     if (this.timer) clearTimeout(this.timer);
   }
 
-  private handle(event: OpenCodeEvent): void {
+  private async handle(event: OpenCodeEvent): Promise<void> {
     if (event.type === "session.text.delta" && typeof event.data.delta === "string") {
       this.text += event.data.delta;
       this.schedule();
@@ -70,9 +77,48 @@ class ActiveTask {
     if (event.type === "session.step.ended") {
       this.tokens = event.data.tokens;
       this.cost = typeof event.data.cost === "number" ? event.data.cost : undefined;
+      this.collectFromEvent(event.data);
+    }
+    if (event.type === "file.edited" || event.type === "filesystem.changed" || event.type === "session.diff" || event.type.includes("tool.")) {
+      this.collectFromEvent(event.data);
     }
     if (event.type === "session.execution.succeeded") void this.finish("correcto");
     if (event.type === "session.execution.failed") void this.finish("alerta");
+  }
+
+  private collectFromEvent(data: Record<string, unknown>): void {
+    this.collectOutputPaths(data.files);
+    this.collectOutputPaths(data.outputPaths);
+    this.collectOutputPaths(data.diff);
+    this.collectOutputValue(data.file);
+    this.collectOutputValue(data.path);
+    if (data.input && typeof data.input === "object") {
+      const input = data.input as Record<string, unknown>;
+      this.collectOutputValue(input.path);
+      this.collectOutputValue(input.filePath);
+      this.collectOutputValue(input.file);
+    }
+  }
+
+  private collectOutputPaths(files: unknown): void {
+    if (typeof files === "string") {
+      this.collectOutputValue(files);
+      return;
+    }
+    if (!Array.isArray(files)) return;
+    for (const file of files) this.collectOutputValue(file);
+  }
+
+  private collectOutputValue(value: unknown): void {
+    if (typeof value === "string") {
+      const path = toWorkspaceRelative(value);
+      if (path) this.outputPaths.add(path);
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    const file = value as Record<string, unknown>;
+    if (file.status === "deleted") return;
+    for (const key of ["file", "path", "filename", "uri"]) this.collectOutputValue(file[key]);
   }
 
   private schedule(): void {
@@ -87,9 +133,41 @@ class ActiveTask {
   private async finish(status: "correcto" | "alerta"): Promise<void> {
     if (this.timer) clearTimeout(this.timer);
     this.timer = undefined;
+    this.outputs = await this.registerOutputs();
     await this.render(status, true);
     this.stop();
     this.remove();
+  }
+
+  private async registerOutputs(): Promise<StoredFile[]> {
+    const outputs: StoredFile[] = [];
+    const seen = new Set<string>();
+    for (const path of this.outputPaths) {
+      const stored = await this.storeOutput(path, undefined, seen);
+      if (stored) outputs.push(stored);
+    }
+    for (const path of extractMentionedPaths(this.text)) {
+      const stored = await this.storeOutput(path, undefined, seen);
+      if (stored) outputs.push(stored);
+    }
+    for (const diagram of extractDiagramFences(this.text)) {
+      const hash = createHash("sha256").update(diagram.source).digest("hex").slice(0, 12);
+      const stored = await this.storeOutput(`.openbot/diagrams/${hash}.${diagram.ext}`, diagram.source, seen);
+      if (stored) outputs.push(stored);
+    }
+    return outputs;
+  }
+
+  private async storeOutput(path: string, content?: string, seen = new Set<string>()): Promise<StoredFile | undefined> {
+    try {
+      const file = content === undefined ? await workspaceFile(path) : await writeWorkspaceFile(path, content);
+      if (seen.has(file.path)) return undefined;
+      seen.add(file.path);
+      return registerFile({ sessionId: this.input.sessionId, path: file.path, mime: file.mime, size: file.size, direction: "out" });
+    } catch (error) {
+      this.logger.warn({ error, sessionId: this.input.sessionId, path }, "Skipping invalid task output file");
+      return undefined;
+    }
   }
 
   async pause(): Promise<void> {
@@ -116,11 +194,24 @@ class ActiveTask {
       : [];
     try {
       await this.input.message.edit({
-        embeds: [taskEmbed({ ...this.input, status, text: fullText, tokens: this.tokens, cost: this.cost })],
-        files: attachment
+        embeds: [taskEmbed({ ...this.input, status, text: fullText, tokens: this.tokens, cost: this.cost, files: this.outputs })],
+        files: attachment,
+        components: taskFileComponents(this.outputs)
       });
     } catch (error) {
       this.logger.error({ error, sessionId: this.input.sessionId }, "Task status message update failed");
     }
   }
+}
+
+function extractMentionedPaths(text: string): string[] {
+  const paths = new Set<string>();
+  for (const match of text.matchAll(/(?:^|[\s`"'*(])([A-Za-z0-9_./\\-]+\.[A-Za-z][A-Za-z0-9]{0,11})/g)) {
+    const raw = match[1];
+    if (!raw || raw.includes("://")) continue;
+    const path = toWorkspaceRelative(raw);
+    if (!path || path.startsWith("node_modules/") || path.startsWith(".git/")) continue;
+    paths.add(path);
+  }
+  return [...paths];
 }
