@@ -7,7 +7,9 @@ import { pingCommand } from "./commands/ping.js";
 import { luchitoCommand } from "./commands/luchito.js";
 import { molestarCommand } from "./commands/molestar.js";
 import { OpenCodeClient } from "./opencode/client.js";
-import { setOpenCodeClient } from "./opencode/runtime.js";
+import { OpenCodeEvents } from "./opencode/events.js";
+import { setOpenCodeClient, setOpenCodeEvents, setTaskTracker } from "./opencode/runtime.js";
+import { TaskTracker } from "./tasks/tracker.js";
 import { statusCommand } from "./commands/status.js";
 import { usageCommand } from "./commands/usage.js";
 import { mcpCommand } from "./commands/mcp.js";
@@ -15,14 +17,21 @@ import { sessionCommand } from "./commands/session.js";
 import { modelCommand } from "./commands/model.js";
 import { reasoningCommand } from "./commands/reasoning.js";
 import { agentCommand } from "./commands/agent.js";
+import { askCommand } from "./commands/ask.js";
+import { abortCommand } from "./commands/abort.js";
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 loadEmojis(logger);
 
 let openCode: OpenCodeClient;
+let openCodeEvents: OpenCodeEvents;
 try {
   openCode = await OpenCodeClient.connect();
   setOpenCodeClient(openCode);
+  openCodeEvents = new OpenCodeEvents(openCode, logger);
+  setOpenCodeEvents(openCodeEvents);
+  setTaskTracker(new TaskTracker(openCodeEvents, logger));
+  openCodeEvents.start();
   const info = await openCode.getInfo();
   logger.info({ version: info.version }, "OpenCode v2 connection verified");
 } catch (error) {
@@ -57,6 +66,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === modelCommand.data.name) await modelCommand.execute(interaction, logger);
     if (interaction.commandName === reasoningCommand.data.name) await reasoningCommand.execute(interaction, logger);
     if (interaction.commandName === agentCommand.data.name) await agentCommand.execute(interaction, logger);
+    if (interaction.commandName === askCommand.data.name) await askCommand.execute(interaction, logger);
+    if (interaction.commandName === abortCommand.data.name) await abortCommand.execute(interaction, logger);
   } catch (error) {
     logger.error({ error, command: interaction.commandName }, "Interaction failed");
     if (interaction.isRepliable() && interaction.deferred && !interaction.replied) {
@@ -70,6 +81,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 const interval = setInterval(() => pruneDatabase(), 24 * 60 * 60 * 1000);
 async function shutdown(): Promise<void> {
   clearInterval(interval);
+  openCodeEvents.stop();
   client.destroy();
   db.close();
 }

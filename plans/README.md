@@ -15,7 +15,7 @@ Rules:
 | [P2](p2-opencode-client.md) | OpenCode client | done |
 | [P3](p3-read-only-commands.md) | Read-only commands | done |
 | [P4](p4-control-commands.md) | Control commands | done |
-| [P5](p5-prompt-task-lifecycle.md) | Prompt + task lifecycle | todo |
+| [P5](p5-prompt-task-lifecycle.md) | Prompt + task lifecycle | done |
 | [P6](p6-downloads.md) | Downloads | todo |
 | [P7](p7-uploads.md) | Uploads | todo |
 | [P8](p8-questions-permissions.md) | Questions & permissions | todo |

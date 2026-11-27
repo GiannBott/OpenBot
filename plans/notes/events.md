@@ -12,7 +12,13 @@ Observed event types:
 - `session.step.started`
 - `session.reasoning.started`
 - `session.reasoning.delta`
+- `session.text.started`
+- `session.text.delta`
+- `session.text.ended` (final assistant text in `data.text`)
+- `session.step.ended` (tokens, cost, generated files)
+- `session.usage.updated`
+- `session.execution.succeeded`
 
-The prompt completed with session `outcome: "succeeded"`; its final transition fell outside the first capture window and the second streaming process was interrupted by the local shell before completion. Therefore `session.execution.succeeded`, terminal text, file-write, form, permission, and error events remain to be captured before P5/P6/P8 implementation.
+The full prompt completion was captured on session `ses_de5a4a252ffer4GmVPp3EMVYSJ`: `session.text.ended` carries `{ sessionID, text }`, `session.step.ended` carries `{ tokens, cost, files }`, and `session.execution.succeeded` carries `{ sessionID }`.
 
 Declared terminal/event candidates from the OpenAPI `types` filter include `session.execution.succeeded`, `session.execution.failed`, `session.execution.interrupted`, `session.text.ended`, `filesystem.changed`, `form.created`, `form.replied`, `permission.asked`, and `permission.replied`.

@@ -31,6 +31,8 @@ const sessionStatsSchema = z.object({
 
 const sessionsResponseSchema = z.object({ data: z.array(sessionSchema) }).passthrough();
 const sessionResponseSchema = z.object({ data: sessionSchema }).passthrough();
+const promptResponseSchema = z.object({ data: z.object({}).passthrough() }).passthrough();
+const interruptResponseSchema = z.object({ interrupted: z.boolean() }).passthrough();
 const listResponse = <T extends z.ZodTypeAny>(item: T) => z.object({ data: z.array(item) }).passthrough();
 const sessionStatsResponseSchema = z.object({ data: sessionStatsSchema }).passthrough();
 
@@ -72,6 +74,14 @@ export class OpenCodeClient {
     return sessionResponseSchema.parse(await this.request("/api/session", { method: "POST", body: {} })).data;
   }
 
+  async sendPrompt(sessionId: string, text: string): Promise<void> {
+    promptResponseSchema.parse(await this.request(`/api/session/${encodeURIComponent(sessionId)}/prompt`, { method: "POST", body: { text } }));
+  }
+
+  async interruptSession(sessionId: string): Promise<boolean> {
+    return interruptResponseSchema.parse(await this.request(`/api/session/${encodeURIComponent(sessionId)}/interrupt`, { method: "POST" })).interrupted;
+  }
+
   async setSessionModel(sessionId: string, model: { providerID: string; id: string; variant?: string }): Promise<void> {
     await this.request(`/api/session/${encodeURIComponent(sessionId)}/model`, { method: "POST", body: { model } });
   }
@@ -95,6 +105,13 @@ export class OpenCodeClient {
   async getSessionStats(from: number, to: number, timezone: string): Promise<OpenCodeSessionStats> {
     const query = new URLSearchParams({ from: String(from), to: String(to), timezone });
     return sessionStatsResponseSchema.parse(await this.request(`/api/experimental/session/stats?${query}`)).data;
+  }
+
+  async openEventStream(signal: AbortSignal): Promise<ReadableStream<Uint8Array>> {
+    const response = await fetch(new URL("/api/event", this.baseUrl), { headers: { Authorization: this.authorization }, signal });
+    if (!response.ok) throw new OpenCodeHttpError(response.status);
+    if (!response.body) throw new Error("OpenCode no devolvió un stream de eventos.");
+    return response.body;
   }
 
   private async request(path: string, init: { method?: "POST"; body?: unknown } = {}): Promise<unknown> {
